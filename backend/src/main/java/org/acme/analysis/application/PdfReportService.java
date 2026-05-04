@@ -8,6 +8,8 @@ import com.lowagie.text.pdf.PdfWriter;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.acme.analysis.domain.AnalysisJob;
 import org.acme.analysis.domain.ResumeAnalysis;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
@@ -21,6 +23,9 @@ public class PdfReportService {
 
     @jakarta.inject.Inject
     com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
+    @ConfigProperty(name = "app.report.timezone")
+    String reportTimezone;
 
     public byte[] generateReport(String company, String role, List<AnalysisJob> jobs) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -46,7 +51,7 @@ public class PdfReportService {
         info.setSpacingAfter(20);
         document.add(info);
 
-        String formattedDate = ZonedDateTime.now(ZoneId.of("America/Sao_Paulo"))
+        String formattedDate = ZonedDateTime.now(ZoneId.of(reportTimezone))
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         Paragraph date = new Paragraph("Data do Relatório: " + formattedDate, normalFont);
         date.setSpacingAfter(20);

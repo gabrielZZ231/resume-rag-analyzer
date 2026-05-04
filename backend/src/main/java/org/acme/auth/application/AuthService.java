@@ -13,6 +13,7 @@ import org.acme.auth.domain.VerificationToken;
 import org.acme.notification.adapter.out.EmailService;
 import org.acme.notification.domain.Notification;
 import org.acme.user.domain.User;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,9 @@ public class AuthService {
 
     @Inject
     EmailService emailService;
+
+    @ConfigProperty(name = "app.jwt.issuer")
+    String jwtIssuer;
 
     public Map<String, String> login(AuthRequest request) {
         String email = request.email().toLowerCase().trim();
@@ -55,7 +59,7 @@ public class AuthService {
             throw new ForbiddenException("Sua solicitação de acesso foi recusada.");
         }
 
-        String token = Jwt.issuer("https://acme.org/")
+        String token = Jwt.issuer(jwtIssuer)
                 .upn(user.email)
                 .groups(new HashSet<>(Arrays.asList(user.role.split(","))))
                 .claim("status", user.status.name())
