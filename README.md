@@ -6,7 +6,7 @@
 [![LangChain4j](https://img.shields.io/badge/LangChain4j-AI-green?style=for-the-badge)](https://docs.langchain4j.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PGVector-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 
-Plataforma **Enterprise-Grade** de análise inteligente de currículos que utiliza **IA Generativa** e **RAG (Retrieval-Augmented Generation)**. O projeto foi arquitetado para demonstrar competências de nível **Pleno/Senior**, focando em escalabilidade, desacoplamento e tecnologias de ponta.
+Plataforma **Enterprise-Grade** de análise inteligente de currículos que utiliza **IA Generativa** e **RAG (Retrieval-Augmented Generation)**. O projeto foi arquitetado para demonstrar competências de nível, focando em escalabilidade, desacoplamento e tecnologias de ponta.
 
 ---
 
