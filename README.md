@@ -93,7 +93,8 @@ O projeto está totalmente conteinerizado para facilitar o setup inicial.
 Qualidade é prioridade. O projeto conta com testes automatizados em ambas as frentes:
 
 ### Backend (JUnit 5 & RestAssured)
-Foco em testes de integração para garantir que os fluxos de API e persistência funcionem:
+Foco em testes de integração para garantir que os fluxos de API e persistência funcionem. 
+**Nota:** É necessário que o Docker esteja em execução, pois o projeto utiliza **Testcontainers (Dev Services)** para subir um banco de dados real durante os testes.
 ```bash
 cd backend && ./mvnw test
 ```
