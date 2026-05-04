@@ -135,5 +135,5 @@ A segurança foi tratada como um cidadão de primeira classe no desenvolvimento 
 - ✅ **Sistema de Aprovação:** Fluxo de segurança para novos usuários (Auth & Admin).
 
 ---
-**Desenvolvido como um Showcase Técnico por [Seu Nome/GitHub]**  
+**Desenvolvido como um Showcase Técnico por Gabriel Silva**  
 *Foco em Engenharia de Software, IA Generativa e Clean Code.*
