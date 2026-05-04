@@ -1,0 +1,134 @@
+# ==============================================================================
+# OS / System
+# ==============================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==============================================================================
+# IDEs / Editors
+# ==============================================================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+*.code-workspace
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+cmake-build-*/
+
+# Others
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache/
+*.sublime-project
+*.sublime-workspace
+.zed/
+
+# ==============================================================================
+# Build & Dependencies
+# ==============================================================================
+# General
+node_modules/
+dist/
+build/
+bin/
+target/
+out-tsc/
+bazel-out/
+.gradle/
+.m2/
+.npm/
+
+# Java / Quarkus
+*.class
+*.log
+*.jar
+*.war
+*.ear
+.quarkus/
+.vscode-quarkus/
+
+# Node / Angular
+.angular/
+.npm/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.stylelintcache
+/connect.lock
+/libpeerconnection.log
+testem.log
+/typings
+.sass-cache/
+
+# ==============================================================================
+# Secrets & Environment
+# ==============================================================================
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+.env.*
+!.env.example
+.envrc
+
+# Keys & Certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cert
+*.pub
+*.csr
+backend/src/main/resources/jwt/
+
+# ==============================================================================
+# Docker & Infrastructure
+# ==============================================================================
+# Docker
+.docker/
+docker-compose.override.yml
+
+
+# ==============================================================================
+# Local Data & Logs
+# ==============================================================================
+postgres-data/
+*.log
+logs/
+tmp/
+temp/
+
+# ==============================================================================
+# Testing & Coverage
+# ==============================================================================
+coverage/
+.nyc_output/
+.scannerwork/
+test-results/
+junit.xml
