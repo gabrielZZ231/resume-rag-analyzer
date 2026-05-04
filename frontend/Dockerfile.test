@@ -1,0 +1,24 @@
+FROM node:20-slim
+
+# Instala o Chromium e dependências necessárias para os testes
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-freefont-ttf \
+    libxss1 \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Define o caminho do Chromium para o Karma
+ENV CHROME_BIN=/usr/bin/chromium
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+# Comando para rodar os testes
+CMD ["npx", "ng", "test", "--watch=false", "--browsers=ChromeHeadlessNoSandbox"]
