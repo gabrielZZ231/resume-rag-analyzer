@@ -26,7 +26,7 @@ Thumbs.db
 *.iml
 *.iws
 *.ipr
-out/
+/out/
 cmake-build-*/
 
 # Others
