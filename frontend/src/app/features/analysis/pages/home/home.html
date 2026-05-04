@@ -1,0 +1,322 @@
+<div class="fixed inset-0 -z-10 overflow-hidden">
+  <div
+    class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px]"
+  ></div>
+  <div
+    class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-50/50 blur-[120px]"
+  ></div>
+</div>
+
+<div class="container mx-auto px-4 py-10 max-w-6xl">
+  <app-navbar [user]="user()"></app-navbar>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <div *ngIf="!currentJobId()" class="lg:col-span-4">
+      <div
+        class="glass p-8 rounded-[2rem] shadow-xl shadow-blue-900/5 sticky top-10"
+      >
+        <h2
+          class="text-xl font-bold mb-8 flex items-center gap-3 text-slate-800"
+        >
+          <span class="h-8 w-1 bg-blue-600 rounded-full"></span>
+          Setup de Análise
+        </h2>
+
+        <form (ngSubmit)="processAnalysis()" class="space-y-6">
+          <div class="space-y-3">
+            <label
+              class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider ml-1"
+              >Empresa e Cargo</label
+            >
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                [ngModel]="company()"
+                (ngModelChange)="company.set($event)"
+                name="company"
+                placeholder="Empresa"
+                required
+                class="w-full p-4 bg-white/50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm"
+              />
+              <input
+                type="text"
+                [ngModel]="role()"
+                (ngModelChange)="role.set($event)"
+                name="role"
+                placeholder="Cargo"
+                required
+                class="w-full p-4 bg-white/50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <label
+              class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider ml-1"
+              >Requisitos da Vaga</label
+            >
+            <textarea
+              [ngModel]="jobDescription()"
+              (ngModelChange)="jobDescription.set($event)"
+              name="jobDescription"
+              rows="4"
+              class="w-full p-4 bg-white/50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm leading-relaxed"
+              placeholder="Ex: Engenheiro de Software Java..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="space-y-3">
+            <label
+              class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider ml-1"
+              >Arquivos dos Candidatos</label
+            >
+            <div class="relative group">
+              <input
+                type="file"
+                (change)="handleFileSelect($event)"
+                multiple
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                accept=".pdf,.docx,.txt"
+                required
+              />
+              <div
+                class="relative overflow-hidden border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-white/30 group-hover:bg-blue-50/50 group-hover:border-blue-400 transition-all text-center"
+              >
+                <div *ngIf="selectedFiles().length === 0" class="relative z-10">
+                  <i
+                    class="fas fa-file-arrow-up text-slate-300 text-3xl mb-2 group-hover:text-blue-500 transition-all"
+                  ></i>
+                  <p class="text-xs font-bold text-slate-600">
+                    Arraste ou clique para carregar
+                  </p>
+                  <p class="text-[9px] text-slate-400 font-medium mt-1">
+                    PDF, DOCX OU TXT
+                  </p>
+                </div>
+
+                <div
+                  *ngIf="selectedFiles().length > 0"
+                  class="space-y-2 relative z-30"
+                >
+                  <div
+                    *ngFor="let file of selectedFiles(); let i = index"
+                    class="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm"
+                  >
+                    <div class="flex items-center gap-2 overflow-hidden">
+                      <i class="fas fa-file-pdf text-blue-500 text-[10px]"></i>
+                      <span
+                        class="text-[10px] font-bold text-slate-600 truncate max-w-[150px]"
+                        >{{ file.name }}</span
+                      >
+                    </div>
+                    <button
+                      type="button"
+                      (click)="removeFile(i)"
+                      class="h-5 w-5 flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors"
+                    >
+                      <i class="fas fa-times text-[10px]"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="isAnalyzing() || selectedFiles().length === 0"
+            class="w-full bg-slate-900 hover:bg-blue-600 disabled:bg-slate-400 text-white font-bold py-5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-3 group"
+          >
+            <span *ngIf="!isAnalyzing()">Processar Candidatos</span>
+            <span *ngIf="isAnalyzing()">Processando...</span>
+            <i
+              class="fas fa-sparkles text-yellow-400"
+              [ngClass]="{ 'animate-spin': isAnalyzing() }"
+            ></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div [ngClass]="currentJobId() ? 'lg:col-span-12' : 'lg:col-span-8'">
+      <div
+        class="glass min-h-[600px] rounded-[2.5rem] shadow-2xl shadow-blue-900/5 overflow-hidden flex flex-col transition-all duration-700"
+        id="result-area"
+      >
+        <div
+          *ngIf="!isAnalyzing() && !analysisResult()"
+          class="m-auto text-center p-12 space-y-6"
+        >
+          <i class="fas fa-file-magnifying-glass text-slate-200 text-6xl"></i>
+          <h3 class="text-2xl font-bold text-slate-700">
+            Aguardando análise...
+          </h3>
+          <p class="text-slate-400 max-w-sm mx-auto leading-relaxed">
+            Envie os arquivos para gerar o relatório detalhado.
+          </p>
+        </div>
+
+        <div
+          *ngIf="isAnalyzing()"
+          class="flex-1 flex flex-col items-center justify-center p-20 space-y-8 relative overflow-hidden"
+        >
+          <div class="scan-line"></div>
+          <div
+            class="bg-white p-8 rounded-3xl shadow-2xl relative z-10 pulse-soft"
+          >
+            <i class="fas fa-brain text-5xl text-blue-600"></i>
+          </div>
+          <h3 class="text-2xl font-black text-slate-800 tracking-tight">
+            Análise em curso...
+          </h3>
+        </div>
+
+        <div
+          *ngIf="analysisResult() as result"
+          class="animate-in fade-in slide-in-from-bottom-10 duration-700 h-full flex flex-col"
+        >
+          <div
+            class="p-10 border-b border-white/50 flex flex-col md:flex-row items-center gap-10"
+            [ngClass]="{
+              'bg-emerald-50': +result.matchScore >= 80,
+              'bg-amber-50':
+                +result.matchScore >= 50 && +result.matchScore < 80,
+              'bg-rose-50': +result.matchScore < 50,
+            }"
+          >
+            <div class="flex-1 text-center md:text-left">
+              <button
+                routerLink="/dashboard"
+                class="mb-4 flex items-center gap-2 text-slate-700 hover:text-slate-900 font-bold text-xs uppercase tracking-widest transition-colors group"
+              >
+                <i
+                  class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"
+                ></i>
+                Voltar para Dashboard
+              </button>
+              <h3 class="text-4xl font-black text-slate-900 tracking-tighter">
+                Índice de Aderência
+              </h3>
+              <p class="text-slate-600 font-medium mt-2">
+                Relatório gerado via RAG & LLM.
+              </p>
+            </div>
+
+            <button
+              *ngIf="currentJobId()"
+              (click)="startNewAnalysis()"
+              class="hidden md:flex bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-2xl shadow-sm transition-all items-center gap-2 active:scale-95"
+            >
+              <i class="fas fa-plus"></i> Nova Análise
+            </button>
+
+            <div class="relative group">
+              <svg class="w-40 h-40 relative transform -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="72"
+                  stroke="rgba(255,255,255,0.8)"
+                  stroke-width="12"
+                  fill="transparent"
+                />
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="72"
+                  stroke-width="14"
+                  fill="transparent"
+                  [attr.stroke]="
+                    +result.matchScore >= 80
+                      ? '#10b981'
+                      : +result.matchScore >= 50
+                        ? '#f59e0b'
+                        : '#f43f5e'
+                  "
+                  [attr.stroke-dasharray]="452.4"
+                  [attr.stroke-dashoffset]="
+                    452.4 - (452.4 * +result.matchScore) / 100
+                  "
+                  stroke-linecap="round"
+                />
+              </svg>
+              <div
+                class="absolute inset-0 flex flex-col items-center justify-center"
+              >
+                <span
+                  class="text-4xl font-black"
+                  [ngClass]="{
+                    'text-emerald-500': +result.matchScore >= 80,
+                    'text-amber-500':
+                      +result.matchScore >= 50 && +result.matchScore < 80,
+                    'text-rose-500': +result.matchScore < 50,
+                  }"
+                >
+                  {{ result.matchScore }}%
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="p-10 space-y-12 bg-white flex-1">
+            <section class="space-y-4">
+              <h4
+                class="text-sm font-black text-slate-800 uppercase tracking-widest"
+              >
+                Resumo do Analista IA
+              </h4>
+              <p class="text-slate-700 leading-relaxed text-lg font-medium">
+                "{{ result.analiseGeral }}"
+              </p>
+            </section>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div class="space-y-6">
+                <h4
+                  class="text-xs font-black text-emerald-600 uppercase tracking-widest"
+                >
+                  Skills Identificadas (Comprovadas)
+                </h4>
+                <div class="flex flex-col gap-4">
+                  <div
+                    *ngFor="let s of result.skillsIdentificadas"
+                    class="p-4 bg-emerald-50 rounded-xl border border-emerald-100"
+                  >
+                    <div class="flex items-center gap-2 mb-2">
+                      <i class="fas fa-check-circle text-emerald-600"></i>
+                      <span class="text-emerald-800 text-sm font-bold"
+                        >{{ s.skillRequisitadaNaVaga }}
+                        <i
+                          class="fas fa-arrow-right mx-1 text-emerald-400 text-[10px]"
+                        ></i>
+                        {{ s.skillEncontradaNoCurriculo }}</span
+                      >
+                    </div>
+                    <p
+                      class="text-xs text-emerald-700 italic border-l-2 border-emerald-300 pl-3"
+                    >
+                      "{{ s.trechoComprovatorioNoCurriculo }}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-6">
+                <h4
+                  class="text-xs font-black text-rose-500 uppercase tracking-widest"
+                >
+                  Gaps de Competência
+                </h4>
+                <div class="flex flex-wrap gap-3">
+                  <span
+                    *ngFor="let s of result.gapsDeCompetencia"
+                    class="px-4 py-2 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-100"
+                    >{{ s }}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

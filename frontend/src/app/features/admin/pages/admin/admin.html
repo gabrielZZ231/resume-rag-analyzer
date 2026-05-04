@@ -1,0 +1,145 @@
+<div class="fixed inset-0 -z-10 overflow-hidden">
+  <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px]"></div>
+  <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-50/50 blur-[120px]"></div>
+</div>
+
+<div class="container mx-auto px-4 py-10 max-w-6xl">
+  <header class="flex items-center justify-between mb-12 glass p-6 rounded-3xl shadow-xl shadow-blue-900/5 relative z-50">
+    <div class="flex items-center gap-5">
+      <div class="relative cursor-pointer" routerLink="/">
+        <div class="absolute inset-0 bg-blue-600 blur-lg opacity-20"></div>
+        <div class="relative bg-gradient-to-br from-blue-600 to-indigo-700 p-4 rounded-2xl shadow-lg">
+          <i class="fas fa-brain text-white text-2xl"></i>
+        </div>
+      </div>
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight leading-none">Resume Intelligence</h1>
+        <p class="text-slate-500 text-sm font-medium mt-1">Painel Administrativo</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-6">
+      <div class="relative group">
+        <button class="relative p-3 bg-slate-100 hover:bg-blue-100 text-slate-600 rounded-xl transition-all" (click)="toggleNotifDropdown()">
+          <i class="fas fa-bell"></i>
+          <span *ngIf="unreadCount > 0" class="absolute -top-1 -right-1 h-5 w-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+            {{ unreadCount }}
+          </span>
+        </button>
+
+        <div *ngIf="showNotifDropdown" class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60]">
+          <div class="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+            <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Notificações</span>
+            <button class="text-[10px] font-bold text-blue-600" (click)="readAllNotifications()">Limpar todas</button>
+          </div>
+          <div class="max-h-64 overflow-y-auto">
+            <div *ngIf="notifications.length === 0" class="p-8 text-center text-slate-400 text-xs italic">
+              Sem novas solicitações.
+            </div>
+            <div *ngFor="let n of notifications" 
+                 class="p-4 border-b border-slate-50 hover:bg-blue-50/50 transition-colors cursor-pointer" 
+                 [ngClass]="{'opacity-50': n.isRead}"
+                 (click)="markReadAndGo(n.id, n.referenceId)">
+                <p class="text-xs font-bold text-slate-700">{{ n.message }}</p>
+                <p class="text-[9px] text-slate-400 mt-1 uppercase font-black">{{ n.createdAt | date:'short' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative group">
+        <button class="flex items-center gap-3 p-2 pr-4 bg-slate-900 text-white rounded-2xl hover:bg-blue-600 transition-all" (click)="toggleProfileDropdown()">
+          <div class="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="text-left hidden md:block">
+            <p class="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none">Perfil</p>
+            <p class="text-sm font-bold leading-none mt-1">Administrador</p>
+          </div>
+          <i class="fas fa-chevron-down text-[10px] ml-2 opacity-60"></i>
+        </button>
+        <div *ngIf="showProfileDropdown" class="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[60]">
+          <a routerLink="/" class="flex items-center gap-3 p-4 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+            <i class="fas fa-plus-circle text-emerald-500"></i> Nova Análise
+          </a>
+          <a routerLink="/dashboard" class="flex items-center gap-3 p-4 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors border-t border-slate-50">
+            <i class="fas fa-chart-pie text-blue-500"></i> Talent Dashboard
+          </a>
+          <button (click)="logout()" class="w-full text-left flex items-center gap-3 p-4 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors border-t border-slate-50">
+            <i class="fas fa-sign-out-alt"></i> Sair do Sistema
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="glass rounded-[2.5rem] shadow-2xl shadow-blue-900/5 overflow-hidden bg-white/80">
+    <div class="border-b border-slate-100 flex items-center px-8">
+      <button (click)="switchTab('triage')" class="px-6 py-6 text-sm font-black uppercase tracking-widest transition-all" [ngClass]="{'tab-active': activeTab === 'triage', 'text-slate-400': activeTab !== 'triage'}">
+        <i class="fas fa-filter mr-2"></i> Triagem Pendente
+      </button>
+      <button (click)="switchTab('manage')" class="px-6 py-6 text-sm font-black uppercase tracking-widest transition-all" [ngClass]="{'tab-active': activeTab === 'manage', 'text-slate-400': activeTab !== 'manage'}">
+        <i class="fas fa-users-cog mr-2"></i> Gerenciar Usuários
+      </button>
+    </div>
+
+    <div *ngIf="activeTab === 'triage'" class="p-0 overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50/50">
+            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuário</th>
+            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ações de Aprovação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="pendingUsers.length === 0">
+            <td colspan="2" class="p-20 text-center">
+              <p class="text-slate-400 font-bold">Nenhuma solicitação pendente.</p>
+            </td>
+          </tr>
+          <tr *ngFor="let user of pendingUsers" class="border-t border-slate-50 hover:bg-slate-50/30 transition-colors" [ngClass]="{'highlight-row': highlightId == user.id}">
+            <td class="p-6 text-sm font-bold text-slate-700">{{ user.email }}</td>
+            <td class="p-6 flex items-center justify-center gap-3">
+              <button (click)="approveUser(user.id)" class="px-6 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs hover:bg-emerald-600 hover:text-white transition-all">Aprovar</button>
+              <button (click)="rejectUser(user.id)" class="px-6 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs hover:bg-rose-600 hover:text-white transition-all">Recusar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="activeTab === 'manage'" class="p-0 overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-50/50">
+            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuário</th>
+            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Role Atual</th>
+            <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="approvedUsers.length === 0">
+            <td colspan="3" class="p-20 text-center text-slate-400 font-bold">Nenhum usuário aprovado.</td>
+          </tr>
+          <tr *ngFor="let user of approvedUsers" class="border-t border-slate-50 hover:bg-slate-50/30 transition-colors">
+            <td class="p-6 text-sm font-bold text-slate-700">{{ user.email }}</td>
+            <td class="p-6">
+              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase" [ngClass]="{'bg-indigo-50 text-indigo-600': user.role.includes('ADMIN'), 'bg-slate-100 text-slate-600': !user.role.includes('ADMIN')}">
+                {{ user.role }}
+              </span>
+            </td>
+            <td class="p-6 flex items-center justify-center gap-3">
+              <select (change)="updateRole(user.id, $any($event.target).value)" class="bg-white border border-slate-200 rounded-lg text-xs p-2 outline-none">
+                <option value="USER" [selected]="user.role === 'USER'">Tornar Usuário</option>
+                <option value="ADMIN,USER" [selected]="user.role.includes('ADMIN')">Tornar Admin</option>
+              </select>
+              <button (click)="deleteUser(user.id)" class="h-9 w-9 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center">
+                <i class="fas fa-trash-alt text-xs"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
