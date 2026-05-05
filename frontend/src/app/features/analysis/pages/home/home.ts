@@ -22,11 +22,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   company = signal('');
   role = signal('');
   jobDescription = signal('');
+  jobDescriptionLength = computed(() => this.jobDescription().length);
+  isDescriptionTooLong = computed(() => this.jobDescriptionLength() > 4000);
   selectedFiles = signal<File[]>([]);
 
   isAnalyzing = signal(false);
   currentJobId = signal<string | null>(null);
   analysisResult = signal<ResumeAnalysis | null>(null);
+  errorMessage = signal<string | null>(null);
 
   private pollIntervalId: any = null;
   private destroy$ = new Subject<void>();
@@ -55,6 +58,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   resetState() {
     this.currentJobId.set(null);
     this.analysisResult.set(null);
+    this.errorMessage.set(null);
     this.company.set('');
     this.role.set('');
     this.jobDescription.set('');
@@ -73,6 +77,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.isAnalyzing.set(true);
     this.currentJobId.set(jobId);
     this.analysisResult.set(null);
+    this.errorMessage.set(null);
 
     this.analysisService
       .getJobStatus(jobId)
@@ -83,13 +88,33 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.analysisResult.set(JSON.parse(job.resultJson));
             this.company.set(job.company);
             this.role.set(job.role);
+          } else if (job.status === 'FAILED') {
+            this.handleJobFailure(job);
           }
           this.isAnalyzing.set(false);
         },
         error: () => {
           this.isAnalyzing.set(false);
+          this.errorMessage.set('Não foi possível carregar os dados desta análise.');
         },
       });
+  }
+
+  private handleJobFailure(job: AnalysisJob) {
+    try {
+      const errorData = JSON.parse(job.resultJson || '{}');
+      let msg = errorData.error || 'Erro desconhecido na análise.';
+      
+      if (msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('quota') || msg.includes('429')) {
+        msg = 'O limite de processamento da IA foi atingido. Por favor, aguarde alguns instantes ou tente com uma descrição menor.';
+      } else if (msg.toLowerCase().includes('token') || msg.toLowerCase().includes('context length')) {
+        msg = 'O texto é muito longo para ser processado pela IA. Tente reduzir a descrição da vaga.';
+      }
+
+      this.errorMessage.set(msg);
+    } catch (e) {
+      this.errorMessage.set('Erro ao processar o resultado da análise.');
+    }
   }
 
   ngOnDestroy() {
@@ -157,6 +182,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.isAnalyzing.set(true);
     this.analysisResult.set(null);
+    this.errorMessage.set(null);
 
     const formData = new FormData();
     formData.append('company', this.company());
@@ -179,6 +205,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.isAnalyzing.set(false);
+          this.errorMessage.set('Erro ao iniciar o processamento.');
         },
       });
   }
@@ -200,6 +227,7 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.isAnalyzing.set(false);
           } else if (job.status === 'FAILED') {
             this.stopPolling();
+            this.handleJobFailure(job);
             this.isAnalyzing.set(false);
           }
         });

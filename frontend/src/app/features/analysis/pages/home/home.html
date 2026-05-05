@@ -51,10 +51,15 @@
           </div>
 
           <div class="space-y-3">
-            <label
-              class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider ml-1"
-              >Requisitos da Vaga</label
-            >
+            <div class="flex justify-between items-center ml-1">
+              <label
+                class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider"
+                >Requisitos da Vaga</label
+              >
+              <span class="text-[10px] font-bold text-slate-400">
+                {{ jobDescriptionLength() }} caracteres
+              </span>
+            </div>
             <textarea
               [ngModel]="jobDescription()"
               (ngModelChange)="jobDescription.set($event)"
@@ -64,6 +69,21 @@
               placeholder="Ex: Engenheiro de Software Java..."
               required
             ></textarea>
+
+            <div class="flex items-start gap-2 px-1">
+              <i class="fas fa-circle-info text-blue-500 mt-0.5 text-[10px]"></i>
+              <p class="text-[10px] text-slate-500 leading-tight">
+                <strong>Dica:</strong> Para uma análise mais precisa, foque nos requisitos essenciais. Descrições muito longas podem atingir o limite de processamento (TPM) do modelo de IA.
+              </p>
+            </div>
+
+            <div *ngIf="isDescriptionTooLong()" class="flex items-start gap-2 px-1 mt-2 p-3 bg-amber-50/80 backdrop-blur-sm rounded-xl border border-amber-200 animate-in fade-in slide-in-from-top-2">
+              <i class="fas fa-triangle-exclamation text-amber-500 mt-0.5 text-xs"></i>
+              <p class="text-[10px] text-amber-800 leading-normal">
+                <strong>Atenção:</strong> A descrição está extensa ({{ jobDescriptionLength() }} caracteres). 
+                Recomendamos remover textos não essenciais (ex: "Sobre a empresa", "Benefícios") para garantir que a IA foque no que realmente importa e evitar erros de limite de tokens.
+              </p>
+            </div>
           </div>
 
           <div class="space-y-3">
@@ -145,7 +165,7 @@
         id="result-area"
       >
         <div
-          *ngIf="!isAnalyzing() && !analysisResult()"
+          *ngIf="!isAnalyzing() && !analysisResult() && !errorMessage()"
           class="m-auto text-center p-12 space-y-6"
         >
           <i class="fas fa-file-magnifying-glass text-slate-200 text-6xl"></i>
@@ -155,6 +175,27 @@
           <p class="text-slate-400 max-w-sm mx-auto leading-relaxed">
             Envie os arquivos para gerar o relatório detalhado.
           </p>
+        </div>
+
+        <div
+          *ngIf="!isAnalyzing() && errorMessage() as error"
+          class="m-auto text-center p-12 space-y-6 animate-in fade-in zoom-in duration-300"
+        >
+          <div class="bg-rose-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-triangle-exclamation text-rose-500 text-4xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-slate-800">
+            Ops! Algo deu errado
+          </h3>
+          <p class="text-rose-600 font-medium max-w-md mx-auto leading-relaxed bg-rose-50/50 p-4 rounded-2xl border border-rose-100">
+            {{ error }}
+          </p>
+          <button 
+            (click)="resetState()"
+            class="mt-4 px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-95"
+          >
+            Tentar Novamente
+          </button>
         </div>
 
         <div
@@ -170,6 +211,9 @@
           <h3 class="text-2xl font-black text-slate-800 tracking-tight">
             Análise em curso...
           </h3>
+          <p *ngIf="isDescriptionTooLong()" class="text-xs text-slate-500 max-w-xs text-center animate-pulse">
+            Como a descrição é longa, a IA está processando os dados em etapas para respeitar os limites de segurança. Por favor, aguarde.
+          </p>
         </div>
 
         <div
