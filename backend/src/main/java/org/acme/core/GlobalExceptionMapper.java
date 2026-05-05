@@ -13,8 +13,18 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
 
     private static final Logger LOG = Logger.getLogger(GlobalExceptionMapper.class);
 
+    @Inject
+    jakarta.ws.rs.core.UriInfo uriInfo;
+
     @Override
     public Response toResponse(Throwable exception) {
+        if (exception instanceof jakarta.ws.rs.NotFoundException) {
+            LOG.warnf("Recurso não encontrado: %s %s", 
+                uriInfo.getRequestUri().getPath(), 
+                exception.getMessage());
+            return ((jakarta.ws.rs.WebApplicationException) exception).getResponse();
+        }
+
         LOG.error("Unhandled exception caught by GlobalExceptionMapper", exception);
 
         if (exception instanceof WebApplicationException webAppException) {
