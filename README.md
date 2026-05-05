@@ -1,4 +1,4 @@
-# Resume RAG Analyzer 🚀 | Fullstack AI Platform
+# Resume RAG Analyzer 🚀 | Plataforma de IA para Recrutamento e Seleção (RH)
 
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 [![Quarkus](https://img.shields.io/badge/Quarkus-3.15-FF0000?style=for-the-badge&logo=quarkus&logoColor=white)](https://quarkus.io/)
@@ -6,58 +6,70 @@
 [![LangChain4j](https://img.shields.io/badge/LangChain4j-AI-green?style=for-the-badge)](https://docs.langchain4j.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PGVector-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 
-Plataforma **Enterprise-Grade** de análise inteligente de currículos que utiliza **IA Generativa** e **RAG (Retrieval-Augmented Generation)**. O projeto foi arquitetado para demonstrar competências de nível, focando em escalabilidade, desacoplamento e tecnologias de ponta.
+O **Resume RAG Analyzer** é uma plataforma de análise inteligente de currículos projetada para transformar o fluxo de trabalho de profissionais de **Recrutamento e Seleção (RH)**. Utilizando **IA Generativa** e **RAG (Retrieval-Augmented Generation)**, o sistema automatiza a triagem técnica e comportamental, permitindo uma análise profunda e comparativa de candidatos em escala.
+
+---
+
+## 🎯 Objetivo e Funcionalidades Principais
+
+O foco principal da plataforma é reduzir o tempo gasto na triagem manual de currículos, garantindo que os melhores talentos sejam identificados através de critérios objetivos e análise semântica.
+
+### ⚡ Análise em Paralelo e Classificação
+- **Processamento em Lote:** Permite o upload simultâneo de múltiplos currículos para uma mesma vaga.
+- **Extração de Pontos-Chave:** A IA identifica competências técnicas, frameworks, anos de experiência e soft skills.
+- **Ranking por Relevância:** Classifica automaticamente os candidatos com base em um *Match Score* calculado contra a descrição da vaga.
+- **Análise Baseada em Evidências:** A IA não apenas pontua, mas justifica a classificação citando trechos específicos do currículo.
+
+### 🛡️ Triagem de Contas e Segurança
+Para manter a organização e a governança da empresa, o sistema inclui um fluxo de controle de acesso:
+- **Aprovação Administrativa:** Novos cadastros entram em modo `PENDING_APPROVAL`, exigindo que um administrador aprove o acesso.
+- **Organização por Perfis:** Separação clara entre administradores (que gerenciam usuários) e recrutadores (que realizam as análises).
+- **Segurança de Dados:** Autenticação via **Stateless JWT** com assinatura assimétrica (RSA).
+- **Zero Config Security:** O sistema gera automaticamente as chaves RSA necessárias ao iniciar via Docker, garantindo segurança imediata sem configuração manual.
 
 ---
 
 ## 🏗️ Arquitetura e Design Patterns
 
-O projeto foi construído sobre pilares sólidos de engenharia de software para garantir manutenibilidade e extensibilidade:
+O projeto foi construído sobre pilares sólidos de engenharia de software para garantir escalabilidade e manutenibilidade:
 
 ### 🔹 Backend (Hexagonal Architecture / Ports & Adapters)
-Implementado com **Java 17** e **Quarkus**, o sistema utiliza uma clara separação de camadas:
-- **Domain:** Modelos de domínio ricos e Records Java para imutabilidade.
-- **Application:** Serviços que orquestram casos de uso, totalmente desacoplados de frameworks de entrada/saída.
-- **Adapters (In/Out):** Implementações específicas para REST (JAX-RS), Persistência (Hibernate/Panache) e Mensageria (Vert.x EventBus).
-- **Event-Driven:** Processamento assíncrono de currículos utilizando o EventBus do Vert.x para não bloquear o fluxo principal.
+Implementado com **Java 17** e **Quarkus**:
+- **Domain-Driven Design (DDD):** Modelos de domínio ricos e regras de negócio isoladas.
+- **Event-Driven:** Processamento assíncrono de currículos utilizando o **Vert.x EventBus** para garantir que a interface nunca fique travada durante análises complexas.
+- **Persistência Vetorial:** Utilização do **PGVector** para buscas semânticas rápidas, permitindo que a IA "consulte" o currículo de forma eficiente.
 
 ### 🔹 Frontend (Modern Angular Architecture)
-Desenvolvido com **Angular 18**, aplicando as melhores práticas da comunidade:
-- **Signals:** Gerenciamento de estado reativo de alta performance, eliminando a necessidade de Zone.js em muitos cenários.
-- **Standalone Components:** Arquitetura modular sem a complexidade de NgModules.
-- **Core/Shared/Features:** Estrutura de pastas escalável para grandes aplicações.
-- **Reactive UI:** Interface construída com **Tailwind CSS** e atualizações em tempo real via **Server-Sent Events (SSE)**.
+Desenvolvido com **Angular 18**:
+- **Signals & RxJS:** Gerenciamento de estado reativo de alta performance.
+- **Server-Sent Events (SSE):** Atualização em tempo real do status das análises sem necessidade de refresh.
+- **Interface Responsiva:** Construída com **Tailwind CSS**, focada na experiência do recrutador.
 
 ---
 
 ## 🛠️ Stack Tecnológica
 
 ### Backend
-- **Quarkus 3.15 LTS:** Java nativo para nuvem com baixo consumo de memória.
-- **LangChain4j:** Integração robusta com LLMs (OpenAI, Gemini, Groq).
-- **Hibernate Reactive / Panache:** Persistência de dados simplificada.
-- **PGVector:** Banco de dados vetorial para busca semântica eficiente.
-- **Mailpit:** Mock de servidor SMTP para testes de fluxo de e-mail.
+- **Quarkus 3.15 LTS:** Framework Java otimizado para nuvem.
+- **LangChain4j:** Orquestração de LLMs (OpenAI, Gemini, Groq).
+- **Hibernate Reactive:** Acesso a dados não bloqueante.
+- **PostgreSQL + PGVector:** Banco de dados relacional e vetorial.
 
 ### Frontend
-- **Angular 18:** Framework SPA com foco em performance.
-- **RxJS:** Programação reativa para fluxos de dados complexos.
-- **Signals API:** Novo paradigma de reatividade do Angular.
-- **Tailwind CSS:** Design responsivo e moderno.
-- **Chart.js:** Visualização de dados das análises.
+- **Angular 18:** Framework SPA moderno.
+- **Tailwind CSS:** Estilização utilitária e responsiva.
+- **Chart.js:** Visualização gráfica dos resultados e comparativos de candidatos.
 
 ---
 
-## 🤖 Engine de Inteligência Artificial (RAG)
+## 🤖 Engine de Inteligência Artificial (RAG Profissional)
 
-O diferencial deste projeto é o uso de **RAG**, que permite à IA analisar o currículo com base em fatos extraídos, reduzindo alucinações.
+O diferencial deste projeto é o uso de uma **Engine de RAG Otimizada**, projetada para alta performance:
 
-- **Processamento:** Extração de texto de PDF e DOCX (Apache PDFBox / POI).
-- **Embeddings:** Transformação de texto em vetores numéricos armazenados no PGVector.
-- **Multi-LLM:** Suporte configurável via `.env` para:
-  - **OpenAI (GPT-4o)**
-  - **Google Gemini (1.5 Flash)**
-  - **Groq (Llama 3)**
+- **Chunking Estratégico:** Divisão inteligente de documentos para que o contexto técnico nunca seja fragmentado.
+- **Batch Embedding:** Conversão de múltiplos currículos em vetores em operações otimizadas de rede.
+- **Multi-Provedor:** Suporte flexível para OpenAI (GPT-4), Google Gemini ou modelos locais (via Ollama).
+- **Robustez Determinística:** Utiliza `JSON Mode` para garantir que as análises sejam sempre estruturadas e fáceis de visualizar no dashboard.
 
 ---
 
@@ -66,74 +78,33 @@ O diferencial deste projeto é o uso de **RAG**, que permite à IA analisar o cu
 O projeto está totalmente conteinerizado para facilitar o setup inicial.
 
 ### Pré-requisitos
-- Docker e Docker Compose instalados.
-- Uma API Key de um provedor de IA (OpenAI, Groq ou Gemini).
+- Docker e Docker Compose.
+- Uma API Key de um provedor de IA (OpenAI ou Gemini).
 
 ### Passo a Passo
 1. Clone o repositório.
 2. Configure as variáveis de ambiente:
    ```bash
    cp .env.example .env
-   # Edite o .env com sua AI_API_KEY e configurações desejadas
+   # Edite o .env com sua AI_API_KEY
    ```
-3. Suba todos os serviços:
+3. Suba o ambiente:
    ```bash
    docker compose up -d --build
    ```
 
 ### URLs de Acesso
 - **Frontend:** `http://localhost:8081`
-- **Backend API:** `http://localhost:8080` (Documentação via `/q/swagger-ui`)
-- **Mailpit (Web UI):** `http://localhost:8025`
+- **Backend API:** `http://localhost:8080/q/swagger-ui`
+- **Mailpit (E-mails):** `http://localhost:8025`
 
 ---
 
 ## 🧪 Estratégia de Testes
 
-Qualidade é prioridade. O projeto conta com testes automatizados em ambas as frentes:
-
-### Backend (JUnit 5 & RestAssured)
-Foco em testes de integração para garantir que os fluxos de API e persistência funcionem. 
-**Nota:** É necessário que o Docker esteja em execução, pois o projeto utiliza **Testcontainers (Dev Services)** para subir um banco de dados real durante os testes.
-```bash
-cd backend && ./mvnw test
-```
-
-### Frontend (Karma & Jasmine)
-Testes unitários para componentes e interceptors:
-```bash
-cd frontend && npm test
-```
-
----
-
-## 🛡️ Segurança e Proteção de Dados
-
-A segurança foi tratada como um cidadão de primeira classe no desenvolvimento desta plataforma:
-
-### 🔐 Autenticação e Autorização
-- **Stateless JWT (JSON Web Tokens):** Implementação de autenticação via JWT para garantir escalabilidade e segurança nas comunicações entre Frontend e Backend.
-- **Assinatura Assimétrica (RSA):** O backend utiliza chaves privadas/públicas (`.pem`) para assinar e validar tokens, seguindo os padrões mais rigorosos de segurança.
-- **RBAC (Role-Based Access Control):** Diferenciação clara entre permissões de `USER` e `ADMIN` via anotações `@RolesAllowed` no Quarkus.
-- **Fluxo de Aprovação:** Novos usuários passam por um estado de `PENDING_APPROVAL`, garantindo que apenas pessoas autorizadas acessem as funcionalidades de IA.
-
-### 🛡️ Proteção da API
-- **CORS Policy:** Configuração restrita de Cross-Origin Resource Sharing, permitindo apenas origens confiáveis.
-- **Tratamento de Exceções Global:** Camada de segurança que evita o vazamento de stack traces internos para o cliente através de um `GlobalExceptionMapper`.
-- **Validação de Inputs:** Uso de Bean Validation (JSR 380) para garantir que dados maliciosos não cheguem às camadas de serviço.
-
-### 🤐 Gestão de Segredos
-- **Environment Variables:** Nenhuma credencial ou chave de API (OpenAI/Gemini) está "hardcoded". Tudo é injetado via variáveis de ambiente.
-- **Ignore Patterns Profissionais:** Arquivos `.gitignore` e `.dockerignore` rigorosamente configurados para impedir o vazamento acidental de chaves privadas, logs ou arquivos `.env` para o controle de versão.
-
----
-
-## 🎯 Funcionalidades em Destaque
-- ✅ **Análise Multinível:** Diferenciação técnica entre linguagens, frameworks e infraestrutura.
-- ✅ **Dashboard de Candidatos:** Comparativo visual de Match Score.
-- ✅ **Relatórios PDF:** Geração de feedback qualitativo exportável.
-- ✅ **Sistema de Aprovação:** Fluxo de segurança para novos usuários (Auth & Admin).
+- **Backend:** Testes de integração com **JUnit 5** e **Testcontainers** (banco real no teste).
+- **Frontend:** Testes unitários com **Karma** e **Jasmine**.
 
 ---
 **Desenvolvido como um Showcase Técnico por Gabriel Silva**  
-*Foco em Engenharia de Software, IA Generativa e Clean Code.*
+*Foco em Engenharia de Software, IA Generativa e Soluções para RH.*
