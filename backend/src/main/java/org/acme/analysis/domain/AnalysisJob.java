@@ -24,6 +24,7 @@ public class AnalysisJob extends PanacheEntityBase {
     public String role;
     public String originalFileName;
     public Integer matchScore;
+    public Boolean isLongResume = false;
 
     @Column(columnDefinition = "TEXT")
     public String jobDescription;

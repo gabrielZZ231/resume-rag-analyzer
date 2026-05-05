@@ -38,7 +38,7 @@ public class AnalysisConsumer {
     @Inject
     AnalysisEventEmitter eventEmitter;
 
-    private static final java.util.concurrent.Semaphore SEMAPHORE = new java.util.concurrent.Semaphore(1);
+    private static final java.util.concurrent.Semaphore SEMAPHORE = new java.util.concurrent.Semaphore(2);
 
     @ConsumeEvent(value = "process-resume", blocking = true)
     public void process(AnalysisRequest request) {
@@ -48,15 +48,9 @@ public class AnalysisConsumer {
             UUID jobId = request.jobId();
             updateJobStatus(jobId, AnalysisJob.JobStatus.PROCESSING);
 
-            AnalysisJob job = null;
-            for (int i = 0; i < 3; i++) {
-                job = AnalysisJob.findById(jobId);
-                if (job != null) break;
-                Thread.sleep(200);
-            }
-
+            AnalysisJob job = AnalysisJob.findById(jobId);
             if (job == null) {
-                LOG.errorf("Job %s não encontrado no banco de dados após retries.", jobId);
+                LOG.errorf("Job %s não encontrado no banco de dados.", jobId);
                 return;
             }
 
@@ -65,44 +59,99 @@ public class AnalysisConsumer {
                 throw new RuntimeException("O arquivo enviado não possui conteúdo legível suficiente para análise.");
             }
 
-            ResumeData resumeData = aiService.structureResumeRaw(cleanResumeText.substring(0, Math.min(cleanResumeText.length(), 8000)));
-            String structuredJsonText = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(resumeData);
+            String cleanJobDescription = sanitizeText(request.jobDescription());
 
+            java.util.List<String> avisosSistema = new java.util.ArrayList<>();
             
-            Thread.sleep(15000); 
+            int chunkSize = 1000;
+            int overlap = 200;
+            java.util.List<dev.langchain4j.data.segment.TextSegment> segments = new java.util.ArrayList<>();
+            
+            for (int i = 0; i < cleanResumeText.length(); i += (chunkSize - overlap)) {
+                int end = Math.min(i + chunkSize, cleanResumeText.length());
+                String chunk = cleanResumeText.substring(i, end).trim();
+                
+                String chunkLower = chunk.toLowerCase();
+                if (chunk.length() < 50 || chunkLower.contains("referências") || chunkLower.contains("interesses pessoais")) {
+                    continue;
+                }
 
-            String[] blocks = cleanResumeText.split("\\n\\s*\\n");
-            for (String block : blocks) {
-                String cleanBlock = sanitizeText(block.trim());
-                if (cleanBlock.length() < 20) continue;
-                var segment = dev.langchain4j.data.segment.TextSegment.from(
-                    cleanBlock.substring(0, Math.min(cleanBlock.length(), 2000)), 
-                    Metadata.from("resumeId", job.resumeId)
-                );
-                embeddingStore.add(embeddingModel.embed(segment).content(), segment);
+                segments.add(dev.langchain4j.data.segment.TextSegment.from(chunk, Metadata.from("resumeId", job.resumeId)));
+                
+                if (segments.size() >= 40) {
+                    markAsLongResume(jobId);
+                    avisosSistema.add("Atenção: Esse currículo é muito longo e apenas as partes mais relevantes foram analisadas");
+                    break;
+                }
+                if (end == cleanResumeText.length()) break;
             }
 
+            if (!segments.isEmpty()) {
+                var embeddings = embeddingModel.embedAll(segments).content();
+                embeddingStore.addAll(embeddings, segments);
+            }
+
+            int dynamicMaxResults = cleanResumeText.length() > 10000 ? 8 : 4;
             var searchRequest = EmbeddingSearchRequest.builder()
-                .queryEmbedding(embeddingModel.embed(sanitizeText(request.jobDescription())).content())
+                .queryEmbedding(embeddingModel.embed(cleanJobDescription.substring(0, Math.min(cleanJobDescription.length(), 3000))).content())
                 .filter(metadataKey("resumeId").isEqualTo(job.resumeId))
-                .maxResults(5).minScore(0.4).build();
+                .maxResults(dynamicMaxResults)
+                .minScore(0.35)
+                .build();
             
             String relevantContext = embeddingStore.search(searchRequest).matches().stream()
-                .map(m -> m.embedded().text()).distinct().reduce("", (a, b) -> a + "\n" + b);
+                .map(m -> m.embedded().text())
+                .distinct()
+                .reduce("", (a, b) -> a + "\n" + b);
 
-            ResumeAnalysis analysis = aiService.analyzeRaw(sanitizeText(job.jobDescription), 
-                "--- DADOS ESTRUTURADOS ---\n" + structuredJsonText + "\n\n--- CONTEXTO RAG ---\n" + sanitizeText(relevantContext));
+            int promptLimit = 5000;
+            String truncatedResume = cleanResumeText;
+            if (cleanResumeText.length() > promptLimit) {
+                truncatedResume = cleanResumeText.substring(0, promptLimit);
+                if (!avisosSistema.contains("Atenção: Esse currículo é muito longo e apenas as partes mais relevantes foram analisadas")) {
+                    markAsLongResume(jobId);
+                    avisosSistema.add("Atenção: Esse currículo é muito longo e apenas as partes mais relevantes foram analisadas");
+                }
+            }
             
-            updateJobSuccess(jobId, analysis);
-
+            ResumeAnalysis analysis = aiService.analyzeRaw(cleanJobDescription, 
+                "--- RESUMO/TOPO DO CURRÍCULO ---\n" + truncatedResume + 
+                "\n\n--- DESTAQUES SEMÂNTICOS ENCONTRADOS PELO RAG ---\n" + sanitizeText(relevantContext));
             
-            Thread.sleep(10000); 
-
+            ResumeAnalysis analysisWithWarnings = new ResumeAnalysis(
+                analysis.matchScore(),
+                analysis.analiseGeral(),
+                analysis.skillsIdentificadas(),
+                analysis.gapsDeCompetencia(),
+                avisosSistema
+            );
+            
+            updateJobSuccess(jobId, analysisWithWarnings);
         } catch (Exception e) {
             LOG.errorf(e, ">>> ERRO CRÍTICO no processamento do Job %s: %s", request.jobId(), e.getMessage());
-            if (request != null) updateJobError(request.jobId(), e.getMessage());
+            String errorMessage = e.getMessage();
+            
+            if (errorMessage != null) {
+                if (errorMessage.toLowerCase().contains("rate limit") || errorMessage.toLowerCase().contains("quota")) {
+                    errorMessage = "LIMITE_IA: O limite de processamento por minuto foi atingido. Aguarde 60 segundos antes de tentar novamente. (Dica: Se usar o plano gratuito, envie um currículo por vez).";
+                } else if (errorMessage.toLowerCase().contains("context_length") || errorMessage.toLowerCase().contains("token")) {
+                    errorMessage = "TAMANHO_EXCEDIDO: O texto enviado é muito grande para o modelo atual.";
+                } else if (errorMessage.contains("OutputParsingException") || errorMessage.contains("JsonParseException")) {
+                    errorMessage = "ERRO_FORMATO: A IA gerou uma resposta em formato inválido. Por favor, tente novamente.";
+                }
+            }
+
+            if (request != null) updateJobError(request.jobId(), errorMessage);
         } finally {
             SEMAPHORE.release();
+        }
+    }
+
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void markAsLongResume(UUID id) {
+        AnalysisJob job = AnalysisJob.findById(id);
+        if (job != null) {
+            job.isLongResume = true;
         }
     }
 
