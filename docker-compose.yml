@@ -51,11 +51,15 @@ services:
       - APP_JWT_ISSUER=${APP_JWT_ISSUER:-https://acme.org/}
       - APP_REPORT_TIMEZONE=${APP_REPORT_TIMEZONE:-America/Sao_Paulo}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,http://localhost:4200,http://localhost:80,http://localhost:8081}
+      - MP_JWT_VERIFY_PUBLICKEY_LOCATION=file:/deployments/jwt/publicKey.pem
+      - SMALLRYE_JWT_SIGN_KEY_LOCATION=file:/deployments/jwt/privateKeyPkcs8.pem
     depends_on:
       postgres:
         condition: service_healthy
       mailpit:
         condition: service_started
+    volumes:
+      - ./backend/src/main/resources/jwt:/deployments/jwt:rw
     networks:
       - resume-network
 
