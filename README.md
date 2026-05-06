@@ -98,6 +98,26 @@ O projeto está totalmente conteinerizado para facilitar o setup inicial.
 - **Backend API:** `http://localhost:8080/q/swagger-ui`
 - **Mailpit (E-mails):** `http://localhost:8025`
 
+### 🔑 Credenciais Padrão (Ambiente de Desenvolvimento)
+Para facilitar o primeiro acesso no ambiente local, o sistema pré-configura as seguintes credenciais:
+
+- **Usuário Admin:** `admin@admin.com` (ou o valor definido em `ADMIN_EMAIL` no `.env`)
+- **Senha Admin:** `admin123` (ou o valor definido em `ADMIN_PASSWORD` no `.env`)
+
+---
+
+## 🔒 Segurança e Boas Práticas
+
+### Uso de Valores Padrão em Variáveis de Ambiente
+No arquivo `docker-compose.yml`, você notará o uso do padrão `${VAR:-default}`. 
+
+- **Por que usar?** Isso facilita o "Ready to Run". Um novo desenvolvedor pode subir o projeto sem configurar nada e ele funcionará imediatamente com as credenciais acima.
+- **Risco em Produção:** Manter senhas padrão como `admin123` ou `quarkus` (banco de dados) em um servidor exposto é uma vulnerabilidade crítica. 
+- **Recomendação:** Em ambientes produtivos, **nunca** utilize os valores padrão. Remova os valores após o `:-` no seu arquivo de deploy ou garanta que o arquivo `.env` contenha senhas fortes e únicas.
+
+### Chaves JWT
+O projeto utiliza chaves RSA para assinatura de tokens. O script `backend/generate-keys.sh` é executado automaticamente no primeiro boot (se as chaves não existirem) ou pode ser rodado manualmente. As chaves são armazenadas em `backend/src/main/resources/jwt/` e estão no `.gitignore` para evitar vazamentos acidentais.
+
 ---
 
 ## 🧪 Estratégia de Testes
